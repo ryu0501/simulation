@@ -195,6 +195,8 @@
         function populatePrefectures() {
             // window.shippingFeesData を使用してグローバルスコープからアクセス
             if (typeof window.shippingFeesData !== 'undefined') {
+                // オプションをクリア (もし既に存在する場合)
+                prefectureSelect.innerHTML = '';
                 for (const prefecture in window.shippingFeesData) {
                     const option = document.createElement('option');
                     option.value = prefecture;
@@ -219,7 +221,6 @@
 
             // 2. 割引率の計算
             let discountRate = 0;
-            // window.discountRatesData を使用してグローバルスコープからアクセス
             if (typeof window.discountRatesData !== 'undefined') {
                 // 累計購入回数に合致する最も高い閾値の割引率を検索 (逆順にループ)
                 for (let i = window.discountRatesData.length - 1; i >= 0; i--) {
@@ -242,8 +243,20 @@
             discountedPriceDisplay.textContent = `¥${discountedPrice.toLocaleString()}`;
 
             // 5. 送料
-            // window.shippingFeesData を使用してグローバルスコープからアクセス
-            const shippingFee = (typeof window.shippingFeesData !== 'undefined') ? window.shippingFeesData[selectedPrefecture] || 0 : 0;
+            let shippingFee = 0;
+            if (typeof window.shippingFeesData !== 'undefined') {
+                const prefectureData = window.shippingFeesData[selectedPrefecture];
+                if (prefectureData) {
+                    // 20食プランの場合は 'large' の送料、それ以外は 'standard' の送料を使用
+                    if (selectedMeals === 20) {
+                        shippingFee = prefectureData.large || 0;
+                    } else {
+                        shippingFee = prefectureData.standard || 0;
+                    }
+                }
+            } else {
+                console.error("Error: shippingFeesData is not defined. Make sure shippingFees.js is loaded and defines window.shippingFeesData.");
+            }
             shippingFeeDisplay.textContent = `¥${shippingFee.toLocaleString()}`;
 
             // 6. 1食あたりの単価（送料込み）
