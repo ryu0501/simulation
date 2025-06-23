@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ナッシュ料金計算シミュレーター</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Soft blue-grey background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem; /* Rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            max-width: 600px;
+            width: 100%;
+            padding: 2.5rem; /* Increased padding */
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #2c3e50; /* Darker title */
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #34495e; /* Slightly darker text for labels */
+        }
+        select, input[type="number"] {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1.25rem; /* More space between inputs */
+            border: 1px solid #d1d5db; /* Light grey border */
+            border-radius: 0.5rem; /* Slightly rounded for inputs */
+            box-sizing: border-box;
+            font-size: 1rem;
+            color: #333;
+            transition: border-color 0.2s ease-in-out;
+        }
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #3b82f6; /* Blue focus border */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Soft blue focus shadow */
+        }
+        .result-section {
+            background-color: #ecf0f1; /* Light grey background for results */
+            border-radius: 0.75rem; /* Rounded corners for result section */
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #cccccc; /* Dashed separator */
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-label {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        .result-value {
+            font-weight: 600;
+            color: #2980b9; /* Blue for values */
+        }
+        .total-result {
+            margin-top: 1rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a5e95; /* Darker blue for totals */
+            text-align: right;
+        }
+        .total-result-large {
+            font-size: 1.5rem; /* Larger font for final totals */
+            margin-top: 1.5rem;
+            border-top: 2px solid #a8dadc; /* Stronger separator for totals */
+            padding-top: 1rem;
+            text-align: right;
+            color: #e74c3c; /* Red color for emphasis */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="container bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full">
+        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">ナッシュ料金計算シミュレーター</h1>
+
+        <!-- プラン選択 -->
+        <div class="mb-5">
+            <label for="mealPlan" class="block text-gray-700 text-base font-medium mb-2">食数プランの選択:</label>
+            <select id="mealPlan" class="block w-full px-4 py-3 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-base">
+                <option value="6">6食プラン</option>
+                <option value="8">8食プラン</option>
+                <option value="10">10食プラン</option>
+                <option value="20">20食プラン</option>
+            </select>
+        </div>
+
+        <!-- 都道府県選択 -->
+        <div class="mb-5">
+            <label for="prefecture" class="block text-gray-700 text-base font-medium mb-2">都道府県の選択:</label>
+            <select id="prefecture" class="block w-full px-4 py-3 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-base">
+                <!-- 都道府県オプションはJSで動的に生成 -->
+            </select>
+        </div>
+
+        <!-- 購入回数入力 -->
+        <div class="mb-5">
+            <label for="purchaseCount" class="block text-gray-700 text-base font-medium mb-2">累計購入回数:</label>
+            <input type="number" id="purchaseCount" value="0" min="0" class="block w-full px-4 py-3 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-base">
+        </div>
+
+        <!-- 月あたり購入回数入力 -->
+        <div class="mb-5">
+            <label for="monthlyPurchaseCount" class="block text-gray-700 text-base font-medium mb-2">月あたり購入回数:</label>
+            <input type="number" id="monthlyPurchaseCount" value="1" min="0" class="block w-full px-4 py-3 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-base">
+        </div>
+
+        <!-- 計算結果表示エリア -->
+        <div class="result-section bg-gray-50 rounded-xl p-6 mt-8">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">計算結果</h2>
+
+            <div class="result-item">
+                <span class="result-label">選択プラン基本料金:</span>
+                <span id="basePrice" class="result-value">¥0</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">適用割引率:</span>
+                <span id="discountRate" class="result-value">0.0%</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">割引額:</span>
+                <span id="discountAmount" class="result-value">¥0</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">割引適用後料金:</span>
+                <span id="discountedPrice" class="result-value">¥0</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">送料:</span>
+                <span id="shippingFee" class="result-value">¥0</span>
+            </div>
+
+            <div class="total-result mt-4 text-lg">
+                <span class="result-label">1食あたりの単価（送料込み）:</span>
+                <span id="unitPriceWithShipping" class="result-value font-bold text-blue-700">¥0</span>
+            </div>
+            <div class="total-result-large mt-4 text-2xl">
+                <span class="result-label">月にかかる金額の合計:</span>
+                <span id="monthlyTotal" class="result-value font-extrabold text-red-600">¥0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 外部データファイルを読み込む -->
+    <script src="shippingFees.js"></script>
+    <script src="discountRates.js"></script>
+
+    <script>
+        // プラン料金データ
+        const planPrices = {
+            6: 4190,  // 例として価格を設定
+            8: 4990,
+            10: 5990,
+            20: 11000
+        };
+
+        // DOM要素の取得
+        const mealPlanSelect = document.getElementById('mealPlan');
+        const prefectureSelect = document.getElementById('prefecture');
+        const purchaseCountInput = document.getElementById('purchaseCount');
+        const monthlyPurchaseCountInput = document.getElementById('monthlyPurchaseCount');
+
+        const basePriceDisplay = document.getElementById('basePrice');
+        const discountRateDisplay = document.getElementById('discountRate');
+        const discountAmountDisplay = document.getElementById('discountAmount');
+        const discountedPriceDisplay = document.getElementById('discountedPrice');
+        const shippingFeeDisplay = document.getElementById('shippingFee');
+        const unitPriceWithShippingDisplay = document.getElementById('unitPriceWithShipping');
+        const monthlyTotalDisplay = document.getElementById('monthlyTotal');
+
+        // 都道府県オプションの生成
+        function populatePrefectures() {
+            // window.shippingFeesData を使用してグローバルスコープからアクセス
+            if (typeof window.shippingFeesData !== 'undefined') {
+                for (const prefecture in window.shippingFeesData) {
+                    const option = document.createElement('option');
+                    option.value = prefecture;
+                    option.textContent = prefecture;
+                    prefectureSelect.appendChild(option);
+                }
+            } else {
+                console.error("Error: shippingFeesData is not defined. Make sure shippingFees.js is loaded and defines window.shippingFeesData.");
+            }
+        }
+
+        // 計算ロジック
+        function calculateNoshPrice() {
+            const selectedMeals = parseInt(mealPlanSelect.value);
+            const selectedPrefecture = prefectureSelect.value;
+            const purchaseCount = parseInt(purchaseCountInput.value);
+            const monthlyPurchaseCount = parseInt(monthlyPurchaseCountInput.value);
+
+            // 1. 基本料金
+            const basePrice = planPrices[selectedMeals] || 0;
+            basePriceDisplay.textContent = `¥${basePrice.toLocaleString()}`;
+
+            // 2. 割引率の計算
+            let discountRate = 0;
+            // window.discountRatesData を使用してグローバルスコープからアクセス
+            if (typeof window.discountRatesData !== 'undefined') {
+                // 累計購入回数に合致する最も高い閾値の割引率を検索 (逆順にループ)
+                for (let i = window.discountRatesData.length - 1; i >= 0; i--) {
+                    if (purchaseCount >= window.discountRatesData[i].threshold) {
+                        discountRate = window.discountRatesData[i].rate;
+                        break; // 適切な割引率が見つかったらループを終了
+                    }
+                }
+            } else {
+                console.error("Error: discountRatesData is not defined. Make sure discountRates.js is loaded and defines window.discountRatesData.");
+            }
+            discountRateDisplay.textContent = `${discountRate.toFixed(1)}%`;
+
+            // 3. 割引額
+            const discountAmount = Math.round(basePrice * (discountRate / 100)); // 小数点以下を四捨五入
+            discountAmountDisplay.textContent = `¥${discountAmount.toLocaleString()}`;
+
+            // 4. 割引適用後料金
+            const discountedPrice = basePrice - discountAmount;
+            discountedPriceDisplay.textContent = `¥${discountedPrice.toLocaleString()}`;
+
+            // 5. 送料
+            // window.shippingFeesData を使用してグローバルスコープからアクセス
+            const shippingFee = (typeof window.shippingFeesData !== 'undefined') ? window.shippingFeesData[selectedPrefecture] || 0 : 0;
+            shippingFeeDisplay.textContent = `¥${shippingFee.toLocaleString()}`;
+
+            // 6. 1食あたりの単価（送料込み）
+            let unitPriceWithShipping = 0;
+            if (selectedMeals > 0) {
+                unitPriceWithShipping = Math.round((discountedPrice + shippingFee) / selectedMeals); // 1食あたりの単価も四捨五入
+            }
+            unitPriceWithShippingDisplay.textContent = `¥${unitPriceWithShipping.toLocaleString()}`;
+
+            // 7. 月にかかる金額の合計
+            const monthlyTotal = (discountedPrice + shippingFee) * monthlyPurchaseCount;
+            monthlyTotalDisplay.textContent = `¥${monthlyTotal.toLocaleString()}`;
+        }
+
+        // イベントリスナーの追加
+        mealPlanSelect.addEventListener('change', calculateNoshPrice);
+        prefectureSelect.addEventListener('change', calculateNoshPrice);
+        purchaseCountInput.addEventListener('input', calculateNoshPrice);
+        monthlyPurchaseCountInput.addEventListener('input', calculateNoshPrice);
+
+        // 初期表示
+        window.onload = () => {
+            populatePrefectures(); // 都道府県オプションを初期化時に生成
+            calculateNoshPrice(); // 初期計算を実行
+        };
+    </script>
+</body>
+</html>
